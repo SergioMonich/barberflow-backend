@@ -1,10 +1,32 @@
 # BarberFlow Backend — Guia da Etapa 6 (CRUD de Clientes)
 
-Bem-vindo ao projeto! Este documento tem tudo que você precisa para implementar o CRUD de Clientes sem precisar entender o projeto inteiro de uma vez.
+Bem-vindo ao projeto! Este documento tem tudo que você precisa para implementar o CRUD de Clientes sem precisar entender o projeto inteiro de uma vez — incluindo o contexto e as decisões que vieram antes de você entrar, já que elas não estão em nenhuma outra conversa que você tenha acesso.
 
 ## 1. O que é o projeto
 
-API FastAPI para um app de gestão de barbearias (agenda + financeiro básico). Backend em Python, banco PostgreSQL, ORM SQLModel.
+API FastAPI para um app de gestão de barbearias (agenda + financeiro básico), voltado para barbeiros autônomos e pequenas barbearias que hoje controlam tudo por WhatsApp/caderno. Backend em Python, banco PostgreSQL, ORM SQLModel. Também é um trabalho acadêmico (exige CRUD completo, JWT, Swagger e uma camada de repositories).
+
+## 1.1 Decisões de arquitetura e o porquê (leia antes de codar)
+
+- **Toda tabela tem `barbearia_id`**, mesmo o MVP sendo de 1 barbearia por usuário. Isso é proposital: prepara o sistema para "múltiplos barbeiros/barbearias" no futuro sem reescrever o banco. Por isso, **nunca confie num `barbearia_id` vindo do corpo da requisição** — sempre pegue do usuário logado.
+- **Padrão de 3 camadas obrigatório**: Router → Service → Repository → Model. Não pule camadas (ex: Router nunca chama o banco direto). Veja a seção 4.
+- **Campos de valor "congelados"**: em `Agendamento.valor` e `MovimentacaoFinanceira.valor`, o número é copiado no momento da criação, não uma referência viva ao preço atual do serviço. Isso existe para que mudanças de preço no futuro não alterem retroativamente relatórios financeiros antigos. Não é redundância — é proposital. (Isso não afeta diretamente o CRUD de Clientes, mas ajuda a entender o estilo de modelagem do projeto.)
+- **Erros de rota protegida devolvem 404, não 403** quando o registro existe mas pertence a outra barbearia — isso evita vazar a informação de que o registro existe.
+
+## 1.2 Entidades do banco (visão completa, não só Cliente)
+
+| Entidade | O que guarda |
+|----------|--------------|
+| Usuario | login/senha, dono da conta |
+| Barbearia | 1 por usuário dono (no MVP) |
+| Barbeiro | pode ser o próprio dono, no MVP |
+| **Cliente** | **← você vai trabalhar aqui** |
+| Servico | nome, preço, duração |
+| Agendamento | liga cliente + barbeiro + serviço + data |
+| CategoriaFinanceira | categoriza receitas/despesas |
+| MovimentacaoFinanceira | receitas e despesas, pode vir de um agendamento concluído |
+
+Nenhuma dessas outras entidades tem rotas (Router/Service/Repository) prontas ainda além de `Usuario` (autenticação) — só os models/tabelas existem.
 
 ## 2. Como rodar o projeto na sua máquina
 
@@ -124,6 +146,13 @@ Pelo Swagger (`/docs`): registre um usuário, faça login, clique em **Authorize
 
 Está tudo na branch `etapa-6-clientes` — comite ali, não direto na `main`. Quando terminar, abra um Pull Request para revisão antes de fazer o merge.
 
-## 8. Dúvidas
+## 8. Problemas já conhecidos (para não perder tempo redescobrindo)
+
+- **Pydantic v2**: `class Config: env_file = ".env"` dentro de uma classe de Settings **não funciona mais** — use `model_config = SettingsConfigDict(env_file=".env")`.
+- **psycopg2 no Windows**: se aparecer `UnicodeDecodeError: 'utf-8' codec can't decode byte ...` ao conectar no banco, é um bug conhecido do psycopg2 em máquinas Windows com idioma português — o projeto já usa `psycopg` (v3) em vez de `psycopg2-binary` por causa disso. Se por algum motivo isso reaparecer, o erro real costuma estar escondido atrás desse erro de Unicode.
+- **Porta 5432 ocupada**: se você já tiver um PostgreSQL instalado nativamente no Windows, ele pode brigar pela porta 5432 com o container Docker. Nesse caso, suba o container numa porta diferente (ex: `-p 5433:5432`) e ajuste o `DATABASE_URL` no seu `.env` — isso é só local, não precisa avisar ninguém nem mudar nada no código.
+- **Colar código no VS Code**: preste atenção se o editor não "achatar" o código em uma linha só ao colar (aconteceu bastante durante o desenvolvimento). Python é sensível a indentação — confira sempre antes de salvar.
+
+## 9. Dúvidas
 
 Se travar em algo, descreva o erro completo (a mensagem toda, não só um resumo) — isso ajuda demais a diagnosticar rápido.
