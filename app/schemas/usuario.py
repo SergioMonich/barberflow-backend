@@ -5,7 +5,8 @@ class UsuarioCreate(BaseModel):
     
     nome: str 
     email: EmailStr 
-    senha: str 
+    senha: str
+    nome_barbearia: str 
 
 #UsuarioRead é o que a API devolve (não tem senha nem senha_hash, isso nunca deve sair da API)  
 class UsuarioRead(BaseModel): 
