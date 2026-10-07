@@ -1,4 +1,4 @@
-from datetime import datetime 
+from datetime import datetime, timezone
 from typing import Optional 
 from sqlmodel import SQLModel, Field 
 
@@ -10,4 +10,4 @@ class Cliente(SQLModel, table=True):
     telefone: Optional[str] = None 
     email: Optional[str] = None 
     observacoes: Optional[str] = None 
-    criado_em: datetime = Field(default_factory=datetime)
+    criado_em: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))

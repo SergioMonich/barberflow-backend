@@ -1,4 +1,4 @@
-from datetime import datetime 
+from datetime import datetime, timezone
 from typing import Optional 
 from sqlmodel import SQLModel, Field 
 
@@ -9,4 +9,4 @@ class Barbearia(SQLModel, table=True):
     endereco: Optional[str] = None 
     telefone: Optional[str] = None 
     dono_id: int = Field(foreign_key="usuario.id") #cria o vínculo com a tabela Usuario
-    criado_em: datetime = Field(default_factory=datetime)
+    criado_em: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
