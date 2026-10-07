@@ -1,4 +1,4 @@
-from datetime import datetime 
+from datetime import datetime, timezone
 from typing import Optional 
 from sqlmodel import SQLModel, Field 
 
@@ -9,4 +9,4 @@ class Usuario(SQLModel, table=True):
     email: str = Field(unique=True, index=True) 
     senha_hash: str 
     tipo: str = Field(default="dono") 
-    criado_em: datetime = Field(default_factory=datetime)
+    criado_em: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))

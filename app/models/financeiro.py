@@ -1,4 +1,4 @@
-from datetime import date, datetime 
+from datetime import datetime, timezone 
 from typing import Optional 
 from sqlmodel import SQLModel, Field 
 
@@ -11,6 +11,6 @@ class MovimentacaoFinanceira(SQLModel, table=True):
     descricao: Optional[str] = None 
     valor: float
     #"""MovimentacaoFinanceira.valor precisa existir de forma independente porque nem toda movimentação vem de um agendamento. Uma despesa de aluguel, por exemplo, não tem agendamento nenhum por trás, então não tem de onde "puxar" um valor. Nesse caso, valor é o único lugar onde esse número existe. Quando a movimentação vem de um agendamento concluído (receita automática), valor vai ser preenchido copiando o Agendamento.valor daquele momento.""" 
-    data: date 
+    data: datetime 
     agendamento_id: Optional[int] = Field(default=None, foreign_key="agendamento.id") 
-    criado_em: datetime = Field(default_factory=datetime)
+    criado_em: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
