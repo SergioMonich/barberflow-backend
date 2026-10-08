@@ -1,23 +1,33 @@
-from contextlib import asynccontextmanager 
-from fastapi import FastAPI 
-from app.db.init_db import create_db_and_tables 
-from app.api.routers import auth
-from app.api.routers import auth, clientes 
+from contextlib import asynccontextmanager
+from fastapi import FastAPI
+from fastapi.middleware.cors import CORSMiddleware
+from app.api.routers import auth, clientes
+from app.db.init_db import create_db_and_tables
 
-@asynccontextmanager 
+
+@asynccontextmanager
 async def lifespan(app: FastAPI):
+    create_db_and_tables()
+    yield
 
-    create_db_and_tables() 
-    yield 
+
+app = FastAPI(title="BarberFlow API", lifespan=lifespan)
+
+# Libera chamadas vindas do app Flutter web (em desenvolvimento).
+# Em producao, trocar "*" pelos dominios reais.
+app.add_middleware(
+
+    CORSMiddleware,
+    allow_origins=["*"],
+    allow_methods=["*"],
+    allow_headers=["*"],
     
-app = FastAPI(title="BarberFlow API", lifespan=lifespan) 
+)
 
-#include_router pluga as rotas do auth.py no app principal.prefix="/auth" faz com que /registro vire /auth/registro automaticamente (por isso as rotas no auth.py não precisam repetir 'auth' no caminho)
 app.include_router(auth.router, prefix="/auth", tags=["Autenticacao"])
-
 app.include_router(clientes.router, prefix="/clientes", tags=["Clientes"])
 
-@app.get("/health") 
-def health_check(): 
 
+@app.get("/health")
+def health_check():
     return {"status": "ok"}
