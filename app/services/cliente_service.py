@@ -5,24 +5,12 @@ from app.models.cliente import Cliente
 from app.models.usuario import Usuario
 from app.repositories import barbearia_repository, cliente_repository
 from app.schemas.cliente import ClienteCreate, ClienteUpdate
-
-
-def _obter_barbearia(session: Session, usuario: Usuario) -> Barbearia:
-
-    barbearia = barbearia_repository.buscar_por_dono(session, usuario.id)
-    if barbearia is None:
-
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail="Usuario nao possui barbearia cadastrada",
-        )
-    
-    return barbearia
+from app.services.barbearia_service import obter_barbearia
 
 
 def _obter_cliente_da_barbearia(session: Session, usuario: Usuario, cliente_id: int) -> Cliente:
 
-    barbearia = _obter_barbearia(session, usuario)
+    barbearia = obter_barbearia(session, usuario)
     cliente = cliente_repository.buscar_por_id(session, cliente_id)
 
     if cliente is None or cliente.barbearia_id != barbearia.id:
@@ -37,7 +25,7 @@ def _obter_cliente_da_barbearia(session: Session, usuario: Usuario, cliente_id: 
 
 def criar_cliente(session: Session, usuario: Usuario, dados: ClienteCreate) -> Cliente:
 
-    barbearia = _obter_barbearia(session, usuario)
+    barbearia = obter_barbearia(session, usuario)
     novo_cliente = Cliente(
 
         barbearia_id=barbearia.id,
@@ -53,7 +41,7 @@ def criar_cliente(session: Session, usuario: Usuario, dados: ClienteCreate) -> C
 
 def listar_clientes(session: Session, usuario: Usuario) -> list[Cliente]:
 
-    barbearia = _obter_barbearia(session, usuario)
+    barbearia = obter_barbearia(session, usuario)
 
     return cliente_repository.listar_por_barbearia(session, barbearia.id)
 
