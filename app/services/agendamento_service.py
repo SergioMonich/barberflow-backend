@@ -14,7 +14,7 @@ from app.repositories import (
 
 )
 from app.schemas.agendamento import AgendamentoCreate, AgendamentoUpdate
-from app.services import barbeiro_service
+from app.services import barbeiro_service, financeiro_service
 from app.services.barbearia_service import obter_barbearia
 
 # Quais mudancas de status sao permitidas. Status finais nao saem do lugar.
@@ -216,5 +216,15 @@ def alterar_status(
         )
 
     agendamento.status = novo_status
-    # Etapa 9 (Financeiro): ao virar "concluido", gerar a receita aqui.
-    return agendamento_repository.atualizar(session, agendamento)
+    agendamento = agendamento_repository.atualizar(session, agendamento)
+    if novo_status == "concluido":
+
+        # Atendimento feito = dinheiro no caixa (valor congelado do agendamento).
+        barbearia = obter_barbearia(session, usuario)
+        financeiro_service.registrar_receita_do_agendamento(
+            
+            session, barbearia, agendamento
+
+        )
+
+    return agendamento
